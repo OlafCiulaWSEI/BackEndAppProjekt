@@ -4,3 +4,7 @@ GET {{WebApi_HostAddress}}/weatherforecast/
 Accept: application/json
 
 ###
+
+GET http://localhost:5280/api/Books
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJuYW1lIjoiYWRtaW4iLCJnZW5kZXIiOiJtYWxlIiwiZW1haWwiOiJhZG1pbkB3c2VpLmVkdS5wbCIsImV4cCI6MTc0NDcyNjM5OSwianRpIjoiZWJmMzYyZGEtMjE1NS00OTA0LWE3YzEtNzJkOTE5YzEzYTQ2IiwiYXVkIjoid3NlaSIsImlzcyI6IndzZWkifQ.dGT2VYGQ0EMQYXIv2ifztHZCBrtpS60gnQQ-Qao7LbM
+Accept: application/json
