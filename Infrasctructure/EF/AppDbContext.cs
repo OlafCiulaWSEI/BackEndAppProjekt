@@ -6,6 +6,14 @@ namespace Infrasctructure.EF;
 
 public class AppDbContext:IdentityDbContext<UserEntity>
 {
+    public AppDbContext(DbContextOptions options) : base(options)
+    {
+    }
+
+    protected AppDbContext()
+    {
+    }
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
