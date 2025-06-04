@@ -10,9 +10,9 @@ public class AppDbContext:IdentityDbContext<UserEntity>
     {
     }
 
-    protected AppDbContext()
-    {
-    }
+    // protected AppDbContext()
+    // {
+    // }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -31,7 +31,6 @@ public class AppDbContext:IdentityDbContext<UserEntity>
         };
         adminUser.PasswordHash = "AQAAAAIAAYagAAAAEN4Im6rGVZTx+s2fuPhH31UICA2T6sOMQ9YvPkEOj6a0zu0S+SnQKNg/jnOJM62/QA==";
 
-
         builder.Entity<UserEntity>()
             .HasData(adminUser);
         
@@ -48,6 +47,6 @@ public class AppDbContext:IdentityDbContext<UserEntity>
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
-        optionsBuilder.UseSqlite("Data Source=d:\\Data\\app.db");
+        optionsBuilder.UseSqlite("Data Source=c:\\Data\\app.db");
     }
 }

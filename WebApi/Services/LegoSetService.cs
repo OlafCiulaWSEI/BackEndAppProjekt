@@ -5,6 +5,7 @@ using WebApi.Configuration;
 using CsvHelper;
 using System.Globalization;
 using CsvHelper.Configuration;
+using ApplicationCore.Models;
 
 namespace WebApi.Services
 {

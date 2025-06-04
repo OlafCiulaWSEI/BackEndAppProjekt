@@ -2,7 +2,7 @@ using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 using CsvHelper.Configuration.Attributes;
 
-namespace WebApi.Dto
+namespace ApplicationCore.Models
 {
     public class LegoSet
     {
@@ -66,4 +66,4 @@ namespace WebApi.Dto
         [Name("imageURL")]
         public string? ImageUrl { get; set; }
     }
-}
+} 

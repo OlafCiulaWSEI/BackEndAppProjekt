@@ -21,6 +21,7 @@ public partial class Program
         builder.Services.ConfigureCors();
         builder.Services.Configure<MongoDbSettings>(builder.Configuration.GetSection("MongoDbSettings"));
         builder.Services.AddSingleton<LegoSetService>();
+        builder.Services.AddSingleton<CommentService>();
         // Add services to the container.
         // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
         builder.Services.AddOpenApi();
@@ -44,8 +45,8 @@ public partial class Program
         }
         
         app.UseHttpsRedirection();
-        app.UseAuthorization();
         app.UseAuthentication();
+        app.UseAuthorization();
         app.MapControllers();
         
         await app.RunAsync();
