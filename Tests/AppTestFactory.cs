@@ -15,8 +15,8 @@ public class AppTestFactory<TProgram>
             // Configure MongoDB for testing
             services.Configure<MongoDbSettings>(options =>
             {
-                options.ConnectionString = "mongodb://localhost:27017";
-                options.DatabaseName = "AppTestDb";
+                options.ConnectionString = "mongodb+srv://OlafCiula:BackEndApp@cluster0.hspl6w2.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
+                options.DatabaseName = "LegoDbTest";
             });
         });
         builder.UseEnvironment("Development");

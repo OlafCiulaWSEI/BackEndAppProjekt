@@ -3,6 +3,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using WebApi.Configuration;
 using WebApi.Services;
+using Scalar.AspNetCore;
 
 namespace WebApi;
 public partial class Program
@@ -62,6 +63,7 @@ public partial class Program
         if (app.Environment.IsDevelopment())
         {
             app.MapOpenApi();
+            app.MapScalarApiReference();
         }
         
         app.UseHttpsRedirection();
