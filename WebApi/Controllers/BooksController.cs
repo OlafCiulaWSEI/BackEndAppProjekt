@@ -1,40 +1,38 @@
-using System.Security.Claims;
-using Infrasctructure.EF;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.JsonWebTokens;
+using ApplicationCore.Models;
+using WebApi.Services;
 
 namespace WebApi.Controllers
 {
-    [Route("api/[controller]")]
     [ApiController]
-    [Authorize(Policy = "Bearer")]
-    public class BooksController(UserManager<UserEntity> userManager) : ControllerBase
+    [Route("api/[controller]")]
+    public class BooksController : ControllerBase
     {
-        [HttpGet]
-        public IActionResult GetBook()
+        private readonly UserService _userService;
+
+        public BooksController(UserService userService)
         {
-            Console.WriteLine(GetCurrentUser().UserName);
-            return Ok(new
-            {
-                Title = "C#",
-                Author = "Bloch"
-            });
+            _userService = userService;
         }
-        private UserEntity? GetCurrentUser()
+
+        [HttpGet]
+        [Authorize]
+        public async Task<IActionResult> GetBooks()
         {
-            var user = HttpContext.User.Identity as ClaimsIdentity;
-            if (user != null)
+            var email = User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value;
+            if (string.IsNullOrEmpty(email))
             {
-                string username = user.Claims.FirstOrDefault(x => x.Type == JwtRegisteredClaimNames.Name)?.Value;
-                return userManager.FindByNameAsync(username).Result;
+                return Unauthorized();
             }
 
-            return null;
+            var user = await _userService.FindByEmailAsync(email);
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(new { message = "Books endpoint" });
         }
     }
-    
-    
 }

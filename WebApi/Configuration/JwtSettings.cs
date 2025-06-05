@@ -2,18 +2,14 @@
 
 public class JwtSettings
 {
-    private static readonly string _section = "JwtSettings"; 
-    
-    private readonly IConfiguration _configuration;
-    
-    public string? Issuer => _configuration.GetSection(_section).GetSection("ValidIssuer").Value;
-    
-    public string? Audience => _configuration.GetSection(_section).GetSection("ValidAudience").Value;
-    
-    public string? Secret => _configuration.GetSection(_section).GetSection("Secret").Value;
-    
+    public string Secret { get; set; } = string.Empty;
+    public string ValidIssuer { get; set; } = string.Empty;
+    public string ValidAudience { get; set; } = string.Empty;
+
     public JwtSettings(IConfiguration configuration)
     {
-        _configuration = configuration;
+        Secret = configuration["JwtSettings:Secret"] ?? throw new ArgumentNullException("JwtSettings:Secret");
+        ValidIssuer = configuration["JwtSettings:ValidIssuer"] ?? throw new ArgumentNullException("JwtSettings:ValidIssuer");
+        ValidAudience = configuration["JwtSettings:ValidAudience"] ?? throw new ArgumentNullException("JwtSettings:ValidAudience");
     }
 }

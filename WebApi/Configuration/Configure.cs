@@ -1,15 +1,12 @@
 ﻿using System.Text;
-using Infrasctructure.EF;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
 using WebApi.Configuration;
 
 public static class Configure
 {
-
     public static void ConfigureCors(this IServiceCollection services)
     {
         services.AddCors(options =>
@@ -23,7 +20,6 @@ public static class Configure
                     .AllowAnyHeader());
         });
     }
-    
 
     public static void ConfigureJWT(this IServiceCollection services, JwtSettings jwtSettings)
     {
@@ -57,8 +53,8 @@ public static class Configure
                         ValidateAudience = true,
                         ValidateLifetime = true,
                         ValidateIssuerSigningKey = true,
-                        ValidIssuer = jwtSettings.Issuer,
-                        ValidAudience = jwtSettings.Audience,
+                        ValidIssuer = jwtSettings.ValidIssuer,
+                        ValidAudience = jwtSettings.ValidAudience,
                         IssuerSigningKey =
                             new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.Secret)),
                         ClockSkew = TimeSpan.FromSeconds(60)

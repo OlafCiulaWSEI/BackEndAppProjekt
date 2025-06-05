@@ -1,12 +1,9 @@
-﻿using System.Data.Common;
-using Infrasctructure.EF;
-using Microsoft.AspNetCore.Hosting;
+﻿using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using WebApi.Configuration;
 
 namespace Tests;
-
 
 public class AppTestFactory<TProgram>
     : WebApplicationFactory<TProgram> where TProgram : class
@@ -15,30 +12,12 @@ public class AppTestFactory<TProgram>
     {
         builder.ConfigureServices(services =>
         {
-            var dbContextDescriptor = services.SingleOrDefault(
-                d => d.ServiceType ==
-                     typeof(DbContextOptions<AppDbContext>));
-            services.Remove(dbContextDescriptor);
-            var dbConnectionDescriptor = services.SingleOrDefault(
-                d => d.ServiceType ==
-                     typeof(DbConnection));
-
-            services.Remove(dbConnectionDescriptor);
-
-            // Create open SqliteConnection so EF won't automatically close it.
-            // services.AddSingleton<DbConnection>(container =>
-            // {
-            //     var connection = new SqliteConnection("Filename=:memory:");
-            //     connection.Open();
-            //     return connection;
-            // });
-
-            services
-                .AddEntityFrameworkInMemoryDatabase()
-                .AddDbContext<AppDbContext>((container, options) =>
-                {
-                    options.UseInMemoryDatabase("AppTest").UseInternalServiceProvider(container);
-                });
+            // Configure MongoDB for testing
+            services.Configure<MongoDbSettings>(options =>
+            {
+                options.ConnectionString = "mongodb://localhost:27017";
+                options.DatabaseName = "AppTestDb";
+            });
         });
         builder.UseEnvironment("Development");
     }

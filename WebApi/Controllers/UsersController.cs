@@ -1,56 +1,115 @@
-using System.Text;
-using Infrasctructure.EF;
-using JWT.Algorithms;
-using JWT.Builder;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.JsonWebTokens;
-using WebApi.Configuration;
+using WebApi.Services;
 using WebApi.Dto;
+using System.Security.Claims;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
+using System.Text;
+using WebApi.Configuration;
 
 namespace WebApi.Controllers
 {
-    [Route("api/[controller]")]
     [ApiController]
-    public class UsersController(SignInManager<UserEntity> signInManager, UserManager<UserEntity> userManager, JwtSettings jwtSettings) : ControllerBase
+    [Route("api/[controller]")]
+    public class UsersController : ControllerBase
     {
-        [HttpPost("login")]
-        [AllowAnonymous]
-        public async Task<IActionResult> Login(LoginDto dto)
-        {
-            var user = await userManager.FindByNameAsync(dto.Login);
-            if (user is null)
-            {
-                return BadRequest(new {error = "Invalid user or password!"});
-            }
+        private readonly UserService _userService;
+        private readonly JwtSettings _jwtSettings;
 
-            var result = await signInManager.CheckPasswordSignInAsync(user, dto.Password, false);
+        public UsersController(UserService userService, JwtSettings jwtSettings)
+        {
+            _userService = userService;
+            _jwtSettings = jwtSettings;
+        }
+
+        [HttpPost("register")]
+        public async Task<IActionResult> Register(RegisterDto model)
+        {
+            var user = new ApplicationCore.Models.MongoUser
+            {
+                UserName = model.UserName,
+                Email = model.Email,
+                EmailConfirmed = true
+            };
+
+            var result = await _userService.CreateAsync(user, model.Password);
             if (result.Succeeded)
             {
-                //TODO zwrot tokena
-                return Ok(new { token = CreateToken(user)});
+                return Ok(new { message = "User registered successfully" });
             }
-            else
-            {
-                return BadRequest(new {error = "Invalid user or password!"});
-            }
+
+            return BadRequest(result.Errors);
         }
-        
-        private string CreateToken(UserEntity user)
+
+        [HttpPost("login")]
+        public async Task<IActionResult> Login(LoginDto model)
         {
-            return new JwtBuilder()
-                .WithAlgorithm(new HMACSHA256Algorithm())
-                .WithSecret(Encoding.UTF8.GetBytes(jwtSettings.Secret))
-                .AddClaim(JwtRegisteredClaimNames.Name, user.UserName)
-                .AddClaim(JwtRegisteredClaimNames.Gender, "male")
-                .AddClaim(JwtRegisteredClaimNames.Email, user.Email)
-                .AddClaim(JwtRegisteredClaimNames.Exp, DateTimeOffset.UtcNow.AddMinutes(5).ToUnixTimeSeconds())
-                .AddClaim(JwtRegisteredClaimNames.Jti, Guid.NewGuid())
-                .Audience(jwtSettings.Audience)
-                .Issuer(jwtSettings.Issuer)
-                .Encode();
+            var user = await _userService.FindByNameAsync(model.UserName);
+            if (user == null)
+            {
+                return Unauthorized(new { message = "Invalid username or password" });
+            }
+
+            var isPasswordValid = await _userService.CheckPasswordAsync(user, model.Password);
+            if (!isPasswordValid)
+            {
+                return Unauthorized(new { message = "Invalid username or password" });
+            }
+
+            var claims = await _userService.GetClaimsAsync(user);
+            var token = GenerateJwtToken(claims);
+
+            return Ok(new
+            {
+                token,
+                user = new
+                {
+                    user.Id,
+                    user.Email,
+                    user.UserName
+                }
+            });
+        }
+
+        [Authorize]
+        [HttpGet("profile")]
+        public async Task<IActionResult> GetProfile()
+        {
+            var email = User.FindFirst(ClaimTypes.Email)?.Value;
+            if (string.IsNullOrEmpty(email))
+            {
+                return Unauthorized();
+            }
+
+            var user = await _userService.FindByEmailAsync(email);
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(new
+            {
+                user.Id,
+                user.Email,
+                user.UserName
+            });
+        }
+
+        private string GenerateJwtToken(IList<Claim> claims)
+        {
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.Secret));
+            var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+            var token = new JwtSecurityToken(
+                issuer: _jwtSettings.ValidIssuer,
+                audience: _jwtSettings.ValidAudience,
+                claims: claims,
+                expires: DateTime.Now.AddDays(1),
+                signingCredentials: credentials
+            );
+
+            return new JwtSecurityTokenHandler().WriteToken(token);
         }
     }
 }

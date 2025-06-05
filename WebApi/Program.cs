@@ -1,6 +1,6 @@
-using Infrasctructure.EF;
-using Microsoft.AspNetCore.Identity;
-using Scalar.AspNetCore;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 using WebApi.Configuration;
 using WebApi.Services;
 
@@ -11,23 +11,42 @@ public partial class Program
     {
         var builder = WebApplication.CreateBuilder(args);
         
-        builder.Services.AddAuthorization();
+        // Add services to the container
         builder.Services.AddControllers();
-        builder.Services.AddDbContext<AppDbContext>();
-        builder.Services.AddIdentity<UserEntity, IdentityRole>()
-            .AddEntityFrameworkStores<AppDbContext>();
         builder.Services.AddSingleton<JwtSettings>();
-        builder.Services.ConfigureJWT(new JwtSettings(builder.Configuration));
-        builder.Services.ConfigureCors();
         builder.Services.Configure<MongoDbSettings>(builder.Configuration.GetSection("MongoDbSettings"));
+        
+        // Configure JWT Authentication
+        var jwtSettings = new JwtSettings(builder.Configuration);
+        builder.Services.AddAuthentication(options =>
+        {
+            options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+            options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+        })
+        .AddJwtBearer(options =>
+        {
+            options.TokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateIssuer = true,
+                ValidateAudience = true,
+                ValidateLifetime = true,
+                ValidateIssuerSigningKey = true,
+                ValidIssuer = jwtSettings.ValidIssuer,
+                ValidAudience = jwtSettings.ValidAudience,
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.Secret))
+            };
+        });
+
+        builder.Services.AddAuthorization();
+        builder.Services.ConfigureCors();
+        
+        // Register services
         builder.Services.AddSingleton<LegoSetService>();
         builder.Services.AddSingleton<CommentService>();
         builder.Services.AddSingleton<UserService>();
-        builder.Services.AddScoped<UserMigrationService>();
-        // Add services to the container.
-        // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-        builder.Services.AddOpenApi();
         
+        // Add OpenAPI
+        builder.Services.AddOpenApi();
         
         var app = builder.Build();
         
@@ -38,18 +57,10 @@ public partial class Program
         {
             await legoSetService.ImportFromCsv(csvPath);
         }
-
-        // Migrate users from SQLite to MongoDB
-        using (var scope = app.Services.CreateScope())
-        {
-            var userMigrationService = scope.ServiceProvider.GetRequiredService<UserMigrationService>();
-            await userMigrationService.MigrateUsers();
-        }
         
-        // Configure the HTTP request pipeline.
+        // Configure the HTTP request pipeline
         if (app.Environment.IsDevelopment())
         {
-            app.MapScalarApiReference();
             app.MapOpenApi();
         }
         
