@@ -22,6 +22,8 @@ public partial class Program
         builder.Services.Configure<MongoDbSettings>(builder.Configuration.GetSection("MongoDbSettings"));
         builder.Services.AddSingleton<LegoSetService>();
         builder.Services.AddSingleton<CommentService>();
+        builder.Services.AddSingleton<UserService>();
+        builder.Services.AddScoped<UserMigrationService>();
         // Add services to the container.
         // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
         builder.Services.AddOpenApi();
@@ -35,6 +37,13 @@ public partial class Program
         if (File.Exists(csvPath))
         {
             await legoSetService.ImportFromCsv(csvPath);
+        }
+
+        // Migrate users from SQLite to MongoDB
+        using (var scope = app.Services.CreateScope())
+        {
+            var userMigrationService = scope.ServiceProvider.GetRequiredService<UserMigrationService>();
+            await userMigrationService.MigrateUsers();
         }
         
         // Configure the HTTP request pipeline.

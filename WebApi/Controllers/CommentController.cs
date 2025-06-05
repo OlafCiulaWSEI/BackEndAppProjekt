@@ -26,7 +26,8 @@ namespace WebApi.Controllers
         [HttpPost]
         public IActionResult Add([FromBody] Comment comment)
         {
-            // If user is logged in, set UserId from JWT
+            if (string.IsNullOrWhiteSpace(comment.Content))
+                return BadRequest("Treść komentarza nie może być pusta.");
             if (User.Identity != null && User.Identity.IsAuthenticated)
             {
                 comment.UserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -44,6 +45,10 @@ namespace WebApi.Controllers
         [HttpPut("{id}")]
         public IActionResult Update(string id, [FromBody] string content)
         {
+            if (string.IsNullOrWhiteSpace(content))
+                return BadRequest("Treść komentarza nie może być pusta.");
+            if (id == null || id.Length != 24)
+                return BadRequest("Nieprawidłowy format id (musi być 24-znakowy ObjectId).");
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var success = _commentService.Update(id, userId, content);
             if (!success) return Forbid();
@@ -54,6 +59,8 @@ namespace WebApi.Controllers
         [HttpDelete("{id}")]
         public IActionResult Delete(string id)
         {
+            if (id == null || id.Length != 24)
+                return BadRequest("Nieprawidłowy format id (musi być 24-znakowy ObjectId).");
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var success = _commentService.Delete(id, userId);
             if (!success) return Forbid();
