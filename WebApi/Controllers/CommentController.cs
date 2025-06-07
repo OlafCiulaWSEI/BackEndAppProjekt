@@ -1,8 +1,7 @@
-using ApplicationCore.Models;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 using WebApi.Services;
+using ApplicationCore.Models;
+using WebApi.Helpers;
 
 namespace WebApi.Controllers
 {
@@ -17,54 +16,58 @@ namespace WebApi.Controllers
             _commentService = commentService;
         }
 
-        [HttpGet("legoSet/{legoSetId}")]
-        public ActionResult<List<Comment>> GetByLegoSetId(string legoSetId)
+        [HttpGet("legoset/{legoSetId}")]
+        public async Task<ActionResult<PagedResponse<Comment>>> GetByLegoSetId(
+            string legoSetId,
+            [FromQuery] int pageNumber = 1,
+            [FromQuery] int pageSize = 10)
         {
-            return _commentService.GetByLegoSetId(legoSetId);
+            if (pageNumber < 1 || pageSize < 1)
+                return BadRequest("Page number and page size must be greater than 0");
+
+            var response = await _commentService.GetCommentsByLegoSetPaged(legoSetId, pageNumber, pageSize);
+
+            // Add HATEOAS links
+            var urlBuilder = new UrlBuilder(Request, legoSetId);
+            response.Metadata.Links.Add("self", urlBuilder.BuildUrl(pageNumber, pageSize));
+            
+            if (response.Metadata.HasPrevious)
+                response.Metadata.Links.Add("previous", urlBuilder.BuildUrl(pageNumber - 1, pageSize));
+            
+            if (response.Metadata.HasNext)
+                response.Metadata.Links.Add("next", urlBuilder.BuildUrl(pageNumber + 1, pageSize));
+            
+            response.Metadata.Links.Add("first", urlBuilder.BuildUrl(1, pageSize));
+            response.Metadata.Links.Add("last", urlBuilder.BuildUrl(response.Metadata.TotalPages, pageSize));
+
+            return Ok(response);
+        }
+
+        [HttpGet("{id}")]
+        public ActionResult<Comment> GetById(string id)
+        {
+            var comment = _commentService.GetById(id);
+            if (comment == null)
+                return NotFound();
+            return comment;
         }
 
         [HttpPost]
-        public IActionResult Add([FromBody] Comment comment)
+        public ActionResult<Comment> Create(Comment comment)
         {
-            if (string.IsNullOrWhiteSpace(comment.Content))
-                return BadRequest("Treść komentarza nie może być pusta.");
-            if (User.Identity != null && User.Identity.IsAuthenticated)
-            {
-                comment.UserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            }
-            else
-            {
-                comment.UserId = null; // anonymous
-            }
-            comment.CreatedAt = DateTime.UtcNow;
-            _commentService.Add(comment);
-            return Ok(comment);
+            _commentService.Create(comment);
+            return CreatedAtAction(nameof(GetById), new { id = comment.Id }, comment);
         }
 
-        [Authorize]
-        [HttpPut("{id}")]
-        public IActionResult Update(string id, [FromBody] string content)
-        {
-            if (string.IsNullOrWhiteSpace(content))
-                return BadRequest("Treść komentarza nie może być pusta.");
-            if (id == null || id.Length != 24)
-                return BadRequest("Nieprawidłowy format id (musi być 24-znakowy ObjectId).");
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var success = _commentService.Update(id, userId, content);
-            if (!success) return Forbid();
-            return Ok();
-        }
-
-        [Authorize]
         [HttpDelete("{id}")]
         public IActionResult Delete(string id)
         {
-            if (id == null || id.Length != 24)
-                return BadRequest("Nieprawidłowy format id (musi być 24-znakowy ObjectId).");
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var success = _commentService.Delete(id, userId);
-            if (!success) return Forbid();
-            return Ok();
+            var comment = _commentService.GetById(id);
+            if (comment == null)
+                return NotFound();
+
+            _commentService.Delete(id);
+            return NoContent();
         }
     }
 } 

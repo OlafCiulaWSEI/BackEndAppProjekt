@@ -16,28 +16,47 @@ namespace WebApi.Services
             _comments = database.GetCollection<Comment>("Comments");
         }
 
-        public List<Comment> GetByLegoSetId(string legoSetId) =>
-            _comments.Find(c => c.LegoSetId == legoSetId).ToList();
+        public async Task<PagedResponse<Comment>> GetCommentsByLegoSetPaged(string legoSetId, int pageNumber, int pageSize)
+        {
+            var filter = Builders<Comment>.Filter.Eq(c => c.LegoSetId, legoSetId);
+            var totalCount = await _comments.CountDocumentsAsync(filter);
+            var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
+
+            var comments = await _comments.Find(filter)
+                .SortByDescending(c => c.CreatedAt)
+                .Skip((pageNumber - 1) * pageSize)
+                .Limit(pageSize)
+                .ToListAsync();
+
+            var metadata = new PaginationMetadata
+            {
+                CurrentPage = pageNumber,
+                PageSize = pageSize,
+                TotalCount = (int)totalCount,
+                TotalPages = totalPages
+            };
+
+            return new PagedResponse<Comment>(comments, metadata);
+        }
+
+        public List<Comment> GetCommentsByLegoSet(string legoSetId) =>
+            _comments.Find(c => c.LegoSetId == legoSetId)
+                .SortByDescending(c => c.CreatedAt)
+                .ToList();
 
         public Comment? GetById(string id) =>
             _comments.Find(c => c.Id == id).FirstOrDefault();
 
-        public void Add(Comment comment) =>
-            _comments.InsertOne(comment);
-
-        public bool Update(string id, string userId, string content)
+        public Comment Create(Comment comment)
         {
-            var filter = Builders<Comment>.Filter.Where(c => c.Id == id && c.UserId == userId);
-            var update = Builders<Comment>.Update.Set(c => c.Content, content);
-            var result = _comments.UpdateOne(filter, update);
-            return result.ModifiedCount > 0;
+            comment.CreatedAt = DateTime.UtcNow;
+            _comments.InsertOne(comment);
+            return comment;
         }
 
-        public bool Delete(string id, string userId)
+        public void Delete(string id)
         {
-            var filter = Builders<Comment>.Filter.Where(c => c.Id == id && c.UserId == userId);
-            var result = _comments.DeleteOne(filter);
-            return result.DeletedCount > 0;
+            _comments.DeleteOne(c => c.Id == id);
         }
     }
 } 

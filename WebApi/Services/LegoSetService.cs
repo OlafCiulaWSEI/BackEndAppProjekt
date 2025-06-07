@@ -26,6 +26,27 @@ namespace WebApi.Services
             _legoSets = database.GetCollection<LegoSet>("LegoSets");
         }
 
+        public async Task<PagedResponse<LegoSet>> GetAllPaged(int pageNumber, int pageSize)
+        {
+            var totalCount = await _legoSets.CountDocumentsAsync(Builders<LegoSet>.Filter.Empty);
+            var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
+
+            var sets = await _legoSets.Find(Builders<LegoSet>.Filter.Empty)
+                .Skip((pageNumber - 1) * pageSize)
+                .Limit(pageSize)
+                .ToListAsync();
+
+            var metadata = new PaginationMetadata
+            {
+                CurrentPage = pageNumber,
+                PageSize = pageSize,
+                TotalCount = (int)totalCount,
+                TotalPages = totalPages
+            };
+
+            return new PagedResponse<LegoSet>(sets, metadata);
+        }
+
         public List<LegoSet> GetAll() => _legoSets.Find(set => true).ToList();
         
         public LegoSet GetById(string id) => _legoSets.Find(set => set.Id == id).FirstOrDefault();
@@ -45,7 +66,11 @@ namespace WebApi.Services
         public List<int> GetAllYears() => 
             _legoSets.Distinct<int>("Year", FilterDefinition<LegoSet>.Empty).ToList().OrderBy(y => y).ToList();
 
-        public void Create(LegoSet set) => _legoSets.InsertOne(set);
+        public LegoSet Create(LegoSet set)
+        {
+            _legoSets.InsertOne(set);
+            return set;
+        }
 
         public async Task ImportFromCsv(string filePath)
         {
@@ -80,11 +105,11 @@ namespace WebApi.Services
 
     public class NullableDecimalConverter : CsvHelper.TypeConversion.DecimalConverter
     {
-        public override object ConvertFromString(string text, CsvHelper.IReaderRow row, CsvHelper.Configuration.MemberMapData memberMapData)
+        public override object? ConvertFromString(string? text, CsvHelper.IReaderRow row, CsvHelper.Configuration.MemberMapData memberMapData)
         {
             if (string.IsNullOrEmpty(text) || text == "NA")
                 return null;
-            return base.ConvertFromString(text, row, memberMapData);
+            return base.ConvertFromString(text!, row, memberMapData);
         }
     }
 }

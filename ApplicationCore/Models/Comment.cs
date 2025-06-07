@@ -7,16 +7,16 @@ namespace ApplicationCore.Models
     {
         [BsonId]
         [BsonRepresentation(BsonType.ObjectId)]
-        public string Id { get; set; }
+        public string Id { get; set; } = null!;
 
         [BsonElement("legoSetId")]
-        public string LegoSetId { get; set; }
+        public string LegoSetId { get; set; } = null!;
 
         [BsonElement("userId")]
         public string? UserId { get; set; } // null jeśli anonimowy
 
         [BsonElement("content")]
-        public string Content { get; set; }
+        public string Content { get; set; } = null!;
 
         [BsonElement("createdAt")]
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

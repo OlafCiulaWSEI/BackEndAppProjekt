@@ -8,15 +8,15 @@ namespace ApplicationCore.Models
     {
         [BsonId]
         [BsonRepresentation(BsonType.ObjectId)]
-        public string Id { get; set; }
+        public string Id { get; set; } = null!;
 
         [BsonElement("set_id")]
         [Name("set_id")]
-        public string SetId { get; set; }
+        public string SetId { get; set; } = null!;
 
         [BsonElement("name")]
         [Name("name")]
-        public string Name { get; set; }
+        public string Name { get; set; } = null!;
 
         [BsonElement("year")]
         [Name("year")]
@@ -24,7 +24,7 @@ namespace ApplicationCore.Models
 
         [BsonElement("theme")]
         [Name("theme")]
-        public string Theme { get; set; }
+        public string Theme { get; set; } = null!;
 
         [BsonElement("subtheme")]
         [Name("subtheme")]
@@ -36,7 +36,7 @@ namespace ApplicationCore.Models
 
         [BsonElement("category")]
         [Name("category")]
-        public string Category { get; set; }
+        public string Category { get; set; } = null!;
 
         [BsonElement("pieces")]
         [Name("pieces")]

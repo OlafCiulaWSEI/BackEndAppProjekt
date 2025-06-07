@@ -8,3 +8,30 @@ Accept: application/json
 GET http://localhost:5280/api/Books
 Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJuYW1lIjoiYWRtaW4iLCJnZW5kZXIiOiJtYWxlIiwiZW1haWwiOiJhZG1pbkB3c2VpLmVkdS5wbCIsImV4cCI6MTc0NDcyNjM5OSwianRpIjoiZWJmMzYyZGEtMjE1NS00OTA0LWE3YzEtNzJkOTE5YzEzYTQ2IiwiYXVkIjoid3NlaSIsImlzcyI6IndzZWkifQ.dGT2VYGQ0EMQYXIv2ifztHZCBrtpS60gnQQ-Qao7LbM
 Accept: application/json
+
+### Test HATEOAS dla LegoSets - pierwsza strona
+GET http://localhost:5000/api/legoset?pageNumber=1&pageSize=5
+
+### Test HATEOAS dla LegoSets - druga strona
+GET http://localhost:5000/api/legoset?pageNumber=2&pageSize=5
+
+### Test HATEOAS dla LegoSets - ostatnia strona
+GET http://localhost:5000/api/legoset?pageNumber=10&pageSize=5
+
+### Pobierz jeden LegoSet aby użyć jego ID do testów komentarzy
+GET http://localhost:5000/api/legoset
+
+### Test HATEOAS dla komentarzy (podmień {legoSetId} na rzeczywiste ID z poprzedniego zapytania)
+GET http://localhost:5000/api/comment/legoset/{legoSetId}?pageNumber=1&pageSize=5
+
+### Dodaj testowy komentarz (podmień {legoSetId} na rzeczywiste ID)
+POST http://localhost:5000/api/comment
+Content-Type: application/json
+
+{
+    "legoSetId": "{legoSetId}",
+    "content": "Test komentarz dla HATEOAS"
+}
+
+### Test HATEOAS dla komentarzy po dodaniu - sprawdź linki
+GET http://localhost:5000/api/comment/legoset/{legoSetId}?pageNumber=1&pageSize=5

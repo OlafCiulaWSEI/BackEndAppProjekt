@@ -7,28 +7,28 @@ namespace ApplicationCore.Models
     {
         [BsonId]
         [BsonElement("_id")]
-        public string Id { get; set; }
+        public string Id { get; set; } = null!;
 
         [BsonElement("email")]
-        public string Email { get; set; }
+        public string Email { get; set; } = null!;
 
         [BsonElement("normalizedEmail")]
-        public string NormalizedEmail { get; set; }
+        public string NormalizedEmail { get; set; } = null!;
 
         [BsonElement("userName")]
-        public string UserName { get; set; }
+        public string UserName { get; set; } = null!;
 
         [BsonElement("normalizedUserName")]
-        public string NormalizedUserName { get; set; }
+        public string NormalizedUserName { get; set; } = null!;
 
         [BsonElement("passwordHash")]
-        public string PasswordHash { get; set; }
+        public string PasswordHash { get; set; } = null!;
 
         [BsonElement("securityStamp")]
-        public string SecurityStamp { get; set; }
+        public string SecurityStamp { get; set; } = null!;
 
         [BsonElement("concurrencyStamp")]
-        public string ConcurrencyStamp { get; set; }
+        public string ConcurrencyStamp { get; set; } = null!;
 
         [BsonElement("emailConfirmed")]
         public bool EmailConfirmed { get; set; }
@@ -52,6 +52,6 @@ namespace ApplicationCore.Models
         public int AccessFailedCount { get; set; }
 
         [BsonElement("details")]
-        public UserDetails Details { get; set; }
+        public UserDetails Details { get; set; } = null!;
     }
 } 
