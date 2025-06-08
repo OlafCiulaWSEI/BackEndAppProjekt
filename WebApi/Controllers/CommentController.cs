@@ -1,6 +1,8 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 using WebApi.Services;
 using ApplicationCore.Models;
+using Microsoft.AspNetCore.Authorization;
 using WebApi.Helpers;
 
 namespace WebApi.Controllers
@@ -26,8 +28,7 @@ namespace WebApi.Controllers
                 return BadRequest("Page number and page size must be greater than 0");
 
             var response = await _commentService.GetCommentsByLegoSetPaged(legoSetId, pageNumber, pageSize);
-
-            // Add HATEOAS links
+            
             var urlBuilder = new UrlBuilder(Request);
             response.Metadata.Links.Add("self", urlBuilder.BuildUrl(pageNumber, pageSize, "legoSetId", legoSetId));
             
@@ -58,7 +59,22 @@ namespace WebApi.Controllers
             _commentService.Create(comment);
             return CreatedAtAction(nameof(GetById), new { id = comment.Id }, comment);
         }
+        
+        [Authorize]
+        [HttpPut("{id}")]
+        public IActionResult Update(string id, [FromBody] string content)
+        {
+            if (string.IsNullOrWhiteSpace(content))
+                return BadRequest("Treść komentarza nie może być pusta.");
+            if (id == null || id.Length != 24)
+                return BadRequest("Nieprawidłowy format id (musi być 24-znakowy ObjectId).");
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var success = _commentService.Update(id, userId, content);
+            if (!success) return Forbid();
+            return Ok();
+        }
 
+        [Authorize]
         [HttpDelete("{id}")]
         public IActionResult Delete(string id)
         {

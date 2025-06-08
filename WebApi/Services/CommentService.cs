@@ -53,6 +53,14 @@ namespace WebApi.Services
             _comments.InsertOne(comment);
             return comment;
         }
+        
+        public bool Update(string id, string userId, string content)
+        {
+            var filter = Builders<Comment>.Filter.Where(c => c.Id == id);
+            var update = Builders<Comment>.Update.Set(c => c.Content, content);
+            var result = _comments.UpdateOne(filter, update);
+            return result.ModifiedCount > 0;
+        }
 
         public void Delete(string id)
         {
