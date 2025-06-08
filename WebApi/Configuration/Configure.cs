@@ -65,7 +65,7 @@ public static class Configure
                     {
                         if (context.Exception.GetType() == typeof(SecurityTokenException))
                         {
-                            context.Response.Headers.Add("Token-expired", "true");
+                            context.Response.Headers.Append("Token-expired", "true");
                         }
                         return Task.CompletedTask;
                     },

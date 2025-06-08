@@ -2,6 +2,8 @@ using Microsoft.AspNetCore.Mvc;
 using WebApi.Services;
 using ApplicationCore.Models;
 using WebApi.Helpers;
+using ApplicationCore.Models.Filtering;
+using ApplicationCore.Models.Sorting;
 
 namespace WebApi.Controllers
 {
@@ -19,12 +21,36 @@ namespace WebApi.Controllers
         [HttpGet]
         public async Task<ActionResult<PagedResponse<LegoSet>>> GetAll(
             [FromQuery] int pageNumber = 1,
-            [FromQuery] int pageSize = 10)
+            [FromQuery] int pageSize = 10,
+            [FromQuery] string? name = null,
+            [FromQuery] int? yearFrom = null,
+            [FromQuery] int? yearTo = null,
+            [FromQuery] string? theme = null,
+            [FromQuery] string? subtheme = null,
+            [FromQuery] int? minPieces = null,
+            [FromQuery] int? maxPieces = null,
+            [FromQuery] decimal? minPrice = null,
+            [FromQuery] decimal? maxPrice = null,
+            [FromQuery] LegoSetSortingField? sortBy = null,
+            [FromQuery] SortOrder sortOrder = SortOrder.Ascending)
         {
             if (pageNumber < 1 || pageSize < 1)
                 return BadRequest("Page number and page size must be greater than 0");
 
-            var response = await _legoSetService.GetAllPaged(pageNumber, pageSize);
+            var filter = new LegoSetFilter
+            {
+                Name = name,
+                YearFrom = yearFrom,
+                YearTo = yearTo,
+                Theme = theme,
+                Subtheme = subtheme,
+                MinPieces = minPieces,
+                MaxPieces = maxPieces,
+                MinPrice = minPrice,
+                MaxPrice = maxPrice
+            };
+
+            var response = await _legoSetService.GetAllPaged(pageNumber, pageSize, filter, sortBy, sortOrder);
             
             // Add HATEOAS links
             var urlBuilder = new UrlBuilder(Request);

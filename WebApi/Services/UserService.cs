@@ -18,13 +18,17 @@ namespace WebApi.Services
             _users = database.GetCollection<MongoUser>("Users");
         }
 
-        public List<MongoUser> GetAll() => _users.Find(user => true).ToList();
+        public async Task<List<MongoUser>> GetAllAsync() => 
+            await _users.Find(user => true).ToListAsync();
         
-        public MongoUser GetById(string id) => _users.Find(user => user.Id == id).FirstOrDefault();
+        public async Task<MongoUser?> GetByIdAsync(string id) => 
+            await _users.Find(user => user.Id == id).FirstOrDefaultAsync();
         
-        public MongoUser GetByEmail(string email) => _users.Find(user => user.Email == email).FirstOrDefault();
+        public async Task<MongoUser?> GetByEmailAsync(string email) => 
+            await _users.Find(user => user.Email == email).FirstOrDefaultAsync();
         
-        public MongoUser GetByUserName(string userName) => _users.Find(user => user.UserName == userName).FirstOrDefault();
+        public async Task<MongoUser?> FindByNameAsync(string userName) => 
+            await _users.Find(user => user.UserName == userName).FirstOrDefaultAsync();
 
         public async Task<IdentityResult> CreateAsync(MongoUser user, string password)
         {
@@ -54,33 +58,22 @@ namespace WebApi.Services
             return await _users.Find(u => u.Email == email).FirstOrDefaultAsync();
         }
 
-        public async Task<MongoUser> FindByNameAsync(string userName)
-        {
-            return await _users.Find(u => u.UserName == userName).FirstOrDefaultAsync();
-        }
-
-        public async Task<bool> CheckPasswordAsync(MongoUser user, string password)
+        public Task<bool> CheckPasswordAsync(MongoUser user, string password)
         {
             var passwordHasher = new PasswordHasher<MongoUser>();
             var result = passwordHasher.VerifyHashedPassword(user, user.PasswordHash, password);
-            return result == PasswordVerificationResult.Success;
+            return Task.FromResult(result != PasswordVerificationResult.Failed);
         }
 
-        public async Task<IList<Claim>> GetClaimsAsync(MongoUser user)
+        public Task<IList<Claim>> GetClaimsAsync(MongoUser user)
         {
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.Name, user.UserName),
-                new Claim(ClaimTypes.Email, user.Email)
+                new Claim(ClaimTypes.Email, user.Email),
+                new Claim(ClaimTypes.NameIdentifier, user.Id)
             };
-
-            // Dodaj rolę admina dla konkretnego użytkownika (możesz to dostosować)
-            if (user.UserName == "admin")
-            {
-                claims.Add(new Claim(ClaimTypes.Role, "Admin"));
-            }
-
-            return claims;
+            return Task.FromResult<IList<Claim>>(claims);
         }
     }
 } 

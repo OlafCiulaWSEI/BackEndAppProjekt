@@ -35,3 +35,30 @@ Content-Type: application/json
 
 ### Test HATEOAS dla komentarzy po dodaniu - sprawdź linki
 GET http://localhost:5000/api/comment/legoset/{legoSetId}?pageNumber=1&pageSize=5
+
+### Get all Lego sets with pagination
+GET http://localhost:5000/api/LegoSet?pageNumber=1&pageSize=10
+
+### Get Lego sets with name filter
+GET http://localhost:5000/api/LegoSet?name=Star Wars&pageNumber=1&pageSize=10
+
+### Get Lego sets from specific years
+GET http://localhost:5000/api/LegoSet?yearFrom=2020&yearTo=2023&pageNumber=1&pageSize=10
+
+### Get Lego sets by theme
+GET http://localhost:5000/api/LegoSet?theme=Star Wars&pageNumber=1&pageSize=10
+
+### Get Lego sets by price range
+GET http://localhost:5000/api/LegoSet?minPrice=50&maxPrice=100&pageNumber=1&pageSize=10
+
+### Get Lego sets by pieces count
+GET http://localhost:5000/api/LegoSet?minPieces=500&maxPieces=1000&pageNumber=1&pageSize=10
+
+### Get Lego sets sorted by name ascending
+GET http://localhost:5000/api/LegoSet?sortBy=Name&sortOrder=Ascending&pageNumber=1&pageSize=10
+
+### Get Lego sets sorted by price descending
+GET http://localhost:5000/api/LegoSet?sortBy=Price&sortOrder=Descending&pageNumber=1&pageSize=10
+
+### Combined filtering and sorting
+GET http://localhost:5000/api/LegoSet?theme=Star Wars&minPieces=500&sortBy=Price&sortOrder=Descending&pageNumber=1&pageSize=10

@@ -28,17 +28,17 @@ namespace WebApi.Controllers
             var response = await _commentService.GetCommentsByLegoSetPaged(legoSetId, pageNumber, pageSize);
 
             // Add HATEOAS links
-            var urlBuilder = new UrlBuilder(Request, legoSetId);
-            response.Metadata.Links.Add("self", urlBuilder.BuildUrl(pageNumber, pageSize));
+            var urlBuilder = new UrlBuilder(Request);
+            response.Metadata.Links.Add("self", urlBuilder.BuildUrl(pageNumber, pageSize, "legoSetId", legoSetId));
             
             if (response.Metadata.HasPrevious)
-                response.Metadata.Links.Add("previous", urlBuilder.BuildUrl(pageNumber - 1, pageSize));
+                response.Metadata.Links.Add("previous", urlBuilder.BuildUrl(pageNumber - 1, pageSize, "legoSetId", legoSetId));
             
             if (response.Metadata.HasNext)
-                response.Metadata.Links.Add("next", urlBuilder.BuildUrl(pageNumber + 1, pageSize));
+                response.Metadata.Links.Add("next", urlBuilder.BuildUrl(pageNumber + 1, pageSize, "legoSetId", legoSetId));
             
-            response.Metadata.Links.Add("first", urlBuilder.BuildUrl(1, pageSize));
-            response.Metadata.Links.Add("last", urlBuilder.BuildUrl(response.Metadata.TotalPages, pageSize));
+            response.Metadata.Links.Add("first", urlBuilder.BuildUrl(1, pageSize, "legoSetId", legoSetId));
+            response.Metadata.Links.Add("last", urlBuilder.BuildUrl(response.Metadata.TotalPages, pageSize, "legoSetId", legoSetId));
 
             return Ok(response);
         }

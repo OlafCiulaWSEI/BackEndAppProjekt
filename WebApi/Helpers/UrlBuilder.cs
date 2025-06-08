@@ -1,42 +1,50 @@
 using Microsoft.AspNetCore.Http;
 using System.Web;
+using System.Linq;
+using System.Collections.Generic;
 
 namespace WebApi.Helpers;
 
 public class UrlBuilder
 {
     private readonly HttpRequest _request;
-    private readonly string? _legoSetId;
 
-    public UrlBuilder(HttpRequest request, string? legoSetId = null)
+    public UrlBuilder(HttpRequest request)
     {
         _request = request;
-        _legoSetId = legoSetId;
     }
 
     public string BuildUrl(int pageNumber, int pageSize)
     {
-        var uriBuilder = new UriBuilder($"{_request.Scheme}://{_request.Host}{_request.Path}");
-        var query = HttpUtility.ParseQueryString(string.Empty);
+        var queryParams = _request.Query
+            .Where(q => q.Key != "pageNumber" && q.Key != "pageSize")
+            .Select(q => $"{q.Key}={Uri.EscapeDataString(q.Value.ToString() ?? string.Empty)}");
+
+        var baseUrl = $"{_request.Scheme}://{_request.Host}{_request.PathBase}{_request.Path}";
+        var queryString = string.Join("&", queryParams);
         
-        query["pageNumber"] = pageNumber.ToString();
-        query["pageSize"] = pageSize.ToString();
-        
-        if (_legoSetId != null)
+        if (!string.IsNullOrEmpty(queryString))
         {
-            query["legoSetId"] = _legoSetId;
+            queryString = "&" + queryString;
         }
 
-        // Zachowaj inne parametry z oryginalnego zapytania
-        foreach (var key in _request.Query.Keys)
+        return $"{baseUrl}?pageNumber={pageNumber}&pageSize={pageSize}{queryString}";
+    }
+
+    public string BuildUrl(int pageNumber, int pageSize, string additionalParam, string additionalValue)
+    {
+        var queryParams = _request.Query
+            .Where(q => q.Key != "pageNumber" && q.Key != "pageSize" && q.Key != additionalParam)
+            .Select(q => $"{q.Key}={Uri.EscapeDataString(q.Value.ToString() ?? string.Empty)}");
+
+        var baseUrl = $"{_request.Scheme}://{_request.Host}{_request.PathBase}{_request.Path}";
+        var queryString = string.Join("&", queryParams);
+        
+        if (!string.IsNullOrEmpty(queryString))
         {
-            if (key != "pageNumber" && key != "pageSize" && key != "legoSetId")
-            {
-                query[key] = _request.Query[key];
-            }
+            queryString = "&" + queryString;
         }
 
-        uriBuilder.Query = query.ToString();
-        return uriBuilder.Uri.ToString();
+        return $"{baseUrl}?pageNumber={pageNumber}&pageSize={pageSize}&{additionalParam}={Uri.EscapeDataString(additionalValue)}{queryString}";
     }
 } 
