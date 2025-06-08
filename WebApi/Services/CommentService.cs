@@ -54,9 +54,26 @@ namespace WebApi.Services
             return comment;
         }
 
-        public void Delete(string id)
+        public bool Update(string id, string content, string userId)
         {
-            _comments.DeleteOne(c => c.Id == id);
+            var update = Builders<Comment>.Update
+                .Set(c => c.Content, content)
+                .Set(c => c.UpdatedAt, DateTime.UtcNow);
+
+            var result = _comments.UpdateOne(c => c.Id == id, update);
+            return result.ModifiedCount > 0;
+        }
+
+        public bool Delete(string id)
+        {
+            var result = _comments.DeleteOne(c => c.Id == id);
+            return result.DeletedCount > 0;
+        }
+
+        public bool IsCommentOwner(string commentId, string userId)
+        {
+            var comment = GetById(commentId);
+            return comment != null && comment.UserId == userId;
         }
     }
 } 
