@@ -5,6 +5,7 @@ using WebApi.Services;
 using Scalar.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Newtonsoft.Json;
+using Microsoft.OpenApi.Models;
 
 namespace WebApi;
 public partial class Program

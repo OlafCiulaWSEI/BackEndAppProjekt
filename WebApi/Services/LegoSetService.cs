@@ -6,8 +6,8 @@ using CsvHelper;
 using System.Globalization;
 using CsvHelper.Configuration;
 using ApplicationCore.Models;
-using ApplicationCore.Models.Filtering;
 using ApplicationCore.Models.Sorting;
+using ApplicationCore.Models.Filtering;
 
 namespace WebApi.Services
 {
